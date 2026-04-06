@@ -46,6 +46,19 @@ func NewDebugAPI(eth *Ethereum) *DebugAPI {
 	return &DebugAPI{eth: eth}
 }
 
+// InsertRawBlock inserts an RLP-encoded block into the chain.
+// Used for TTL Coin backup node synchronization.
+func (api *DebugAPI) InsertRawBlock(rawBlock hexutil.Bytes) (bool, error) {
+	var block types.Block
+	if err := rlp.DecodeBytes(rawBlock, &block); err != nil {
+		return false, fmt.Errorf("failed to decode block: %v", err)
+	}
+	if _, err := api.eth.BlockChain().InsertChain([]*types.Block{&block}); err != nil {
+		return false, fmt.Errorf("failed to insert block #%d: %v", block.NumberU64(), err)
+	}
+	return true, nil
+}
+
 // DumpBlock retrieves the entire state of the database at a given block.
 func (api *DebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error) {
 	opts := &state.DumpConfig{

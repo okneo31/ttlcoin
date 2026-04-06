@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <title>TTL Coin Wallet</title>
+  <style>
+    :root {
+      --bg: #0f1118; --bg2: #1a1d2e; --bg3: #252940; --border: #2d3154;
+      --text: #e8eaf6; --text2: #9599b3; --accent: #6c63ff; --accent2: #8b83ff;
+      --green: #00e676; --red: #ff5252;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow-y: auto; user-select: none; }
+    .app { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .header { text-align: center; padding: 20px 0 12px; }
+    .header h1 { font-size: 24px; } .header h1 span { color: var(--accent2); }
+    .chain-info { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 4px; }
+
+    .balance-card {
+      background: linear-gradient(135deg, #6c63ff, #3f37c9);
+      border-radius: 16px; padding: 24px; text-align: center; margin: 12px 0;
+    }
+    .balance-card .label { font-size: 13px; opacity: 0.8; }
+    .balance-card .amount { font-size: 32px; font-weight: 700; margin: 6px 0; }
+    .balance-card .address { font-size: 11px; opacity: 0.7; cursor: pointer; word-break: break-all; }
+
+    .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+    .action-btn {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 4px; text-align: center; cursor: pointer; transition: 0.2s;
+    }
+    .action-btn:hover { border-color: var(--accent); }
+    .action-btn .icon { font-size: 20px; } .action-btn .label { font-size: 11px; color: var(--text2); }
+
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+    .card-header { padding: 12px; font-weight: 600; font-size: 14px; border-bottom: 1px solid var(--border); }
+
+    .tx-item { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-dir { font-size: 18px; margin-right: 8px; }
+    .tx-info { flex: 1; } .tx-info .addr { font-size: 12px; color: var(--text2); } .tx-info .time { font-size: 10px; color: var(--text2); }
+    .tx-amount { font-weight: 600; font-size: 13px; } .tx-amount.sent { color: var(--red); } .tx-amount.received { color: var(--green); }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; width: 90%; max-width: 400px; }
+    .modal h2 { margin-bottom: 12px; font-size: 18px; }
+    .modal .close { float: right; background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; }
+
+    input, textarea { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; margin-bottom: 10px; outline: none; }
+    input:focus { border-color: var(--accent); }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: var(--accent); color: #fff; } .btn-primary:hover { background: var(--accent2); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 6px; }
+
+    .welcome { text-align: center; padding: 30px 0; }
+    .welcome h2 { margin-bottom: 12px; } .welcome p { color: var(--text2); margin-bottom: 20px; font-size: 14px; }
+    .empty { text-align: center; padding: 20px; color: var(--text2); font-size: 13px; }
+    .msg { padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+    .msg.success { background: rgba(0,230,118,0.1); color: var(--green); }
+    .msg.error { background: rgba(255,82,82,0.1); color: var(--red); }
+    .qr-container { text-align: center; padding: 16px; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <div class="modal-overlay" id="sendModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('sendModal')">&times;</button>
+      <h2>Send TTL</h2>
+      <div id="sendMsg"></div>
+      <input type="text" id="sendTo" placeholder="Recipient address (0x...)">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input type="text" id="sendAmount" placeholder="Amount (TTL)" style="margin-bottom:0;flex:1">
+        <button class="btn-sm" onclick="sendMax()" style="padding:10px 14px;font-size:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;cursor:pointer">MAX</button>
+      </div>
+      <button class="btn btn-primary" onclick="sendTx()">Send</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="receiveModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('receiveModal')">&times;</button>
+      <h2>Receive TTL</h2>
+      <div class="qr-container" id="qrContainer"></div>
+      <input type="text" id="receiveAddr" readonly style="text-align:center;font-size:11px">
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="importModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('importModal')">&times;</button>
+      <h2>Import Wallet</h2>
+      <input type="password" id="importKey" placeholder="Private key or Mnemonic phrase">
+      <button class="btn btn-primary" onclick="importWallet()">Import</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="minerModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('minerModal')">&times;</button>
+      <h2>Miner Application</h2>
+      <div id="minerMsg"></div>
+      <div id="minerStatus"></div>
+      <input type="text" id="minerName" placeholder="Name (optional)">
+      <button class="btn btn-primary" onclick="applyMiner()">Apply to Mine</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('backupModal')">&times;</button>
+      <h2>Wallet Backup</h2>
+      <p style="color:var(--red);font-size:12px;margin-bottom:10px">Keep this safe! Anyone with this key can access your funds.</p>
+      <label style="font-size:11px;color:var(--text2)">Private Key</label>
+      <textarea id="backupKey" readonly rows="2" style="font-size:11px" onclick="this.select()"></textarea>
+      <label style="font-size:11px;color:var(--text2)">Mnemonic</label>
+      <textarea id="backupMnemonic" readonly rows="2" style="font-size:11px" onclick="this.select()"></textarea>
+      <button class="btn btn-outline" onclick="closeModal('backupModal')">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+    let wallet = null;
+
+    function loadWallet() {
+      const s = localStorage.getItem('ttl_wallet');
+      if (s) { wallet = JSON.parse(s); ttl.setAddress(wallet.address); }
+    }
+    function saveWallet() { if (wallet) { localStorage.setItem('ttl_wallet', JSON.stringify(wallet)); ttl.setAddress(wallet.address); } }
+    function clearWallet() { wallet = null; localStorage.removeItem('ttl_wallet'); render(); }
+
+    function truncAddr(a) { return a ? a.slice(0, 8) + '...' + a.slice(-6) : ''; }
+    function timeAgo(ts) {
+      const d = Math.floor(Date.now() / 1000) - ts;
+      if (d < 60) return d + 's ago'; if (d < 3600) return Math.floor(d/60) + 'm ago';
+      if (d < 86400) return Math.floor(d/3600) + 'h ago'; return Math.floor(d/86400) + 'd ago';
+    }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    async function render() {
+      if (!wallet) return renderWelcome();
+      const [bal, chain, node] = await Promise.all([ttl.getBalance(wallet.address), ttl.getChain(), ttl.nodeStatus()]);
+      const b = parseFloat(bal.formatted || '0').toLocaleString('en-US', { maximumFractionDigits: 4 });
+      const nodeIcon = node.running ? '<span class="dot" style="background:var(--green)"></span>' : '<span class="dot" style="background:var(--red)"></span>';
+      const nodeText = node.running ? `Node: Block ${node.blockNumber.toLocaleString()} | ${node.peers} peers` : 'Node: Starting...';
+      app.innerHTML = `
+        <div class="header">
+          <h1><span>TTL</span>coin Wallet</h1>
+          <div class="chain-info"><span class="dot"></span> Block #${(chain.blockNumber||0).toLocaleString()} | Chain ${chain.chainId||7777}</div>
+          <div class="chain-info">${nodeIcon} ${nodeText}</div>
+        </div>
+        <div class="balance-card">
+          <div class="label">Total Balance</div>
+          <div class="amount">${b} TTL</div>
+          <div class="address" title="Click to copy">${wallet.address}</div>
+        </div>
+        <div class="actions" style="grid-template-columns:repeat(5,1fr)">
+          <div class="action-btn" onclick="openSend()"><div class="icon">&#8593;</div><div class="label">Send</div></div>
+          <div class="action-btn" onclick="openReceive()"><div class="icon">&#8595;</div><div class="label">Receive</div></div>
+          <div class="action-btn" onclick="openMiner()"><div class="icon">&#9874;</div><div class="label">Mine</div></div>
+          <div class="action-btn" onclick="openBackup()"><div class="icon">&#128274;</div><div class="label">Backup</div></div>
+          <div class="action-btn" onclick="if(confirm('Disconnect?'))clearWallet()"><div class="icon">&#128682;</div><div class="label">Logout</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Recent Transactions</div>
+          <div id="txList"><div class="empty">Loading...</div></div>
+        </div>
+      `;
+      loadHistory();
+    }
+
+    function renderWelcome() {
+      app.innerHTML = `
+        <div class="header"><h1><span>TTL</span>coin Wallet</h1></div>
+        <div class="welcome">
+          <h2>Welcome</h2>
+          <p>Create a new wallet or import an existing one.</p>
+          <button class="btn btn-primary" style="margin-bottom:8px" onclick="createWallet()">Create New Wallet</button>
+          <button class="btn btn-outline" onclick="openModal('importModal')">Import Wallet</button>
+        </div>
+      `;
+    }
+
+    async function loadHistory() {
+      const txs = await ttl.getHistory(wallet.address);
+      const el = document.getElementById('txList');
+      if (!txs || txs.length === 0) { el.innerHTML = '<div class="empty">No transactions yet</div>'; return; }
+      el.innerHTML = txs.map(tx => {
+        const sent = tx.from.toLowerCase() === wallet.address.toLowerCase();
+        return `<div class="tx-item">
+          <span class="tx-dir">${sent ? '&#8593;' : '&#8595;'}</span>
+          <div class="tx-info"><div class="addr">${sent ? 'To: '+truncAddr(tx.to) : 'From: '+truncAddr(tx.from)}</div><div class="time">${timeAgo(tx.timestamp)}</div></div>
+          <div class="tx-amount ${sent?'sent':'received'}">${sent?'-':'+'}${tx.value} TTL</div>
+        </div>`;
+      }).join('');
+    }
+
+    async function createWallet() {
+      const data = await ttl.createWallet();
+      wallet = data; saveWallet(); render();
+      setTimeout(() => {
+        document.getElementById('backupKey').value = data.privateKey;
+        document.getElementById('backupMnemonic').value = data.mnemonic;
+        openModal('backupModal');
+      }, 300);
+    }
+
+    async function importWallet() {
+      const input = document.getElementById('importKey').value.trim();
+      if (!input) return;
+      const data = await ttl.importWallet(input);
+      if (data.error) return alert(data.error);
+      wallet = data; saveWallet(); closeModal('importModal'); render();
+    }
+
+    function openSend() {
+      document.getElementById('sendMsg').innerHTML = '';
+      document.getElementById('sendTo').value = '';
+      document.getElementById('sendAmount').value = '';
+      openModal('sendModal');
+    }
+
+    async function sendTx(useMax = false) {
+      const to = document.getElementById('sendTo').value.trim();
+      const amount = document.getElementById('sendAmount').value.trim();
+      const msg = document.getElementById('sendMsg');
+      if (!to) return msg.innerHTML = '<div class="msg error">Enter recipient address</div>';
+      if (!useMax && !amount) return msg.innerHTML = '<div class="msg error">Enter amount</div>';
+      msg.innerHTML = '<div class="msg">Sending...</div>';
+      const res = await ttl.send({ privateKey: wallet.privateKey, to, amount, sendMax: useMax });
+      if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; }
+      else { msg.innerHTML = `<div class="msg success">Sent! ${truncAddr(res.hash)}</div>`; setTimeout(() => { closeModal('sendModal'); render(); }, 2000); }
+    }
+
+    function sendMax() {
+      const to = document.getElementById('sendTo').value.trim();
+      if (!to) { document.getElementById('sendMsg').innerHTML = '<div class="msg error">Enter recipient first</div>'; return; }
+      if (!confirm('Send ALL TTL (minus gas fee)?')) return;
+      sendTx(true);
+    }
+
+    async function openReceive() {
+      const qr = await ttl.getQR(wallet.address);
+      document.getElementById('qrContainer').innerHTML = `<img src="${qr}" width="180"><p style="margin-top:10px;font-size:13px;font-weight:600">Your TTL Address</p>`;
+      document.getElementById('receiveAddr').value = wallet.address;
+      openModal('receiveModal');
+    }
+
+    function openBackup() {
+      document.getElementById('backupKey').value = wallet.privateKey;
+      document.getElementById('backupMnemonic').value = wallet.mnemonic || 'N/A (imported via private key)';
+      openModal('backupModal');
+    }
+
+    async function openMiner() {
+      const msg = document.getElementById('minerMsg');
+      const status = document.getElementById('minerStatus');
+      msg.innerHTML = '';
+      document.getElementById('minerName').value = '';
+
+      const res = await ttl.minerStatus(wallet.address);
+      const mining = await ttl.isMining();
+
+      if (res.status === 'approved') {
+        if (mining.mining) {
+          status.innerHTML = '<div class="msg success">⛏️ Mining active! Earning block rewards.</div>';
+        } else {
+          status.innerHTML = '<div class="msg success">Approved! Click below to start mining.</div><button class="btn btn-primary" onclick="startMining()">Start Mining Now</button>';
+        }
+      } else if (res.status === 'pending') {
+        status.innerHTML = '<div class="msg" style="background:rgba(245,158,11,0.1);color:#f59e0b">Application pending. Waiting for admin approval.</div>';
+      } else if (res.status === 'rejected') {
+        status.innerHTML = '<div class="msg error">Application rejected.</div>';
+      } else {
+        status.innerHTML = '';
+      }
+      openModal('minerModal');
+    }
+
+    async function startMining() {
+      const status = document.getElementById('minerStatus');
+      status.innerHTML = '<div class="msg">Starting miner node... (takes ~10 seconds)</div>';
+      const res = await ttl.startMining({ privateKey: wallet.privateKey });
+      if (res.error) {
+        status.innerHTML = `<div class="msg error">${res.error}</div>`;
+      } else {
+        status.innerHTML = '<div class="msg success">⛏️ Mining started! Block rewards incoming.</div>';
+        setTimeout(() => { closeModal('minerModal'); render(); }, 3000);
+      }
+    }
+
+    async function applyMiner() {
+      const name = document.getElementById('minerName').value.trim();
+      const msg = document.getElementById('minerMsg');
+      msg.innerHTML = '<div class="msg">Submitting...</div>';
+      const res = await ttl.applyMiner({ address: wallet.address, name });
+      if (res.error) {
+        msg.innerHTML = `<div class="msg error">${res.error}</div>`;
+      } else {
+        msg.innerHTML = '<div class="msg success">Application submitted! Waiting for admin approval.</div>';
+      }
+    }
+
+    setInterval(() => { if (wallet) render(); }, 15000);
+    loadWallet(); render();
+  </script>
+</body>
+</html>

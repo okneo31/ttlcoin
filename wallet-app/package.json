@@ -1,0 +1,43 @@
+{
+  "name": "ttlcoin-wallet",
+  "version": "1.0.0",
+  "description": "TTL Coin Desktop Wallet",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-linux": "electron-builder --linux",
+    "build-win": "electron-builder --win",
+    "build-all": "electron-builder --linux --win"
+  },
+  "build": {
+    "appId": "com.ttlcoin.wallet",
+    "productName": "TTL Coin Wallet",
+    "directories": {
+      "output": "dist"
+    },
+    "extraResources": [
+      {
+        "from": "bin",
+        "to": "bin",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Finance"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "icon.ico"
+    }
+  },
+  "dependencies": {
+    "ethers": "^6.13.0",
+    "qrcode": "^1.5.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0",
+    "png2icons": "^2.0.1"
+  }
+}

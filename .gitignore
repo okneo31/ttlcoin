@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.db
+*.enc
+.env
+password.txt
+ttl_keys.md
+config.json
+backup-state.json
+local-backups/
+bin/geth-linux
+bin/geth-win.exe

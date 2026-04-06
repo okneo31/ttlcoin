@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTL Coin Wallet</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <!-- Send Modal -->
+  <div class="modal-overlay" id="sendModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('sendModal')">&times;</button>
+      <h2>Send TTL</h2>
+      <div id="sendMsg"></div>
+      <input type="text" id="sendTo" placeholder="Recipient address (0x...)">
+      <input type="text" id="sendAmount" placeholder="Amount (TTL)">
+      <button class="btn btn-primary" onclick="sendTx()">Send</button>
+    </div>
+  </div>
+
+  <!-- Receive Modal -->
+  <div class="modal-overlay" id="receiveModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('receiveModal')">&times;</button>
+      <h2>Receive TTL</h2>
+      <div class="qr-container" id="qrContainer"></div>
+      <input type="text" id="receiveAddr" readonly style="text-align:center;font-size:12px" onclick="copyAddr()">
+      <button class="btn btn-outline" onclick="copyAddr()">Copy Address</button>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('importModal')">&times;</button>
+      <h2>Import Wallet</h2>
+      <input type="password" id="importKey" placeholder="Private key (0x...) or Mnemonic">
+      <button class="btn btn-primary" onclick="importWallet()">Import</button>
+    </div>
+  </div>
+
+  <!-- Backup Modal -->
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal">
+      <button class="close" onclick="closeModal('backupModal')">&times;</button>
+      <h2>Wallet Backup</h2>
+      <p style="color:var(--red);font-size:13px;margin-bottom:12px">Keep this safe! Anyone with this key can access your funds.</p>
+      <label style="font-size:12px;color:var(--text2)">Private Key</label>
+      <textarea id="backupKey" readonly rows="2" style="font-size:12px" onclick="this.select()"></textarea>
+      <label style="font-size:12px;color:var(--text2)">Mnemonic</label>
+      <textarea id="backupMnemonic" readonly rows="2" style="font-size:12px" onclick="this.select()"></textarea>
+      <button class="btn btn-outline" onclick="closeModal('backupModal')">Close</button>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

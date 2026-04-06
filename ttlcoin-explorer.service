@@ -1,0 +1,19 @@
+[Unit]
+Description=TTL Coin Block Explorer
+After=ttlcoin.service
+Wants=ttlcoin.service
+
+[Service]
+Type=simple
+User=ttl
+Group=ttl
+WorkingDirectory=/home/ttl/ttlcoin/explorer
+ExecStart=/usr/bin/node server.js
+Environment=PORT=3000
+Environment=RPC_URL=http://localhost:8545
+Environment=WS_URL=ws://localhost:8546
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTL Coin Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="login" class="login">
+    <div class="login-box">
+      <h1>TTL Admin Panel</h1>
+      <input type="password" id="adminKey" placeholder="Admin Key">
+      <button class="btn btn-primary" onclick="login()">Login</button>
+    </div>
+  </div>
+  <div id="dashboard" class="dashboard" style="display:none">
+    <header class="header">
+      <h1>TTL<span>coin</span> Admin</h1>
+      <button class="btn-sm" onclick="logout()">Logout</button>
+    </header>
+    <div class="container">
+      <div class="stats" id="stats"></div>
+      <div class="section">
+        <h2>Network Nodes</h2>
+        <div id="allNodes"></div>
+      </div>
+      <div class="section">
+        <h2>Miner Applications</h2>
+        <div id="applications"></div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

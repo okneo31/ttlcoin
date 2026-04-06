@@ -1,0 +1,20 @@
+[Unit]
+Description=TTL Coin IPFS Backup (Filebase)
+After=ttlcoin.service
+Wants=ttlcoin.service
+
+[Service]
+Type=simple
+User=ttl
+Group=ttl
+WorkingDirectory=/home/ttl/ttlcoin/ipfs-backup
+ExecStart=/usr/bin/node backup.js
+Environment=TTL_RPC=http://localhost:8545
+Environment=FILEBASE_KEY=5C046EF5C142C31E64C6
+Environment=FILEBASE_SECRET=7LH4akBzfvrxv10r65NVrtJk1tQl8uxSLiV9dUwB
+Environment=FILEBASE_BUCKET=ttlcoin-backup
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

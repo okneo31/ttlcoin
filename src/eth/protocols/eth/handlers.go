@@ -18,7 +18,6 @@ package eth
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -278,11 +277,21 @@ func ServiceGetReceiptsQuery(chain *core.BlockChain, query GetReceiptsRequest) [
 }
 
 func handleNewBlockhashes(backend Backend, msg Decoder, peer *Peer) error {
-	return errors.New("block announcements disallowed") // We dropped support for non-merge networks
+	// Accept but ignore for TTL Coin Clique PoA (prevents peer disconnect)
+	ann := new(NewBlockHashesPacket)
+	if err := msg.Decode(ann); err != nil {
+		return fmt.Errorf("%w: message %v: %v", errDecode, msg, err)
+	}
+	return nil
 }
 
 func handleNewBlock(backend Backend, msg Decoder, peer *Peer) error {
-	return errors.New("block broadcasts disallowed") // We dropped support for non-merge networks
+	// Accept but ignore for TTL Coin Clique PoA (prevents peer disconnect)
+	ann := new(NewBlockPacket)
+	if err := msg.Decode(ann); err != nil {
+		return fmt.Errorf("%w: message %v: %v", errDecode, msg, err)
+	}
+	return nil
 }
 
 func handleBlockHeaders(backend Backend, msg Decoder, peer *Peer) error {

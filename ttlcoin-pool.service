@@ -1,0 +1,17 @@
+[Unit]
+Description=TTL Coin Mining Pool Distributor
+After=ttlcoin.service
+
+[Service]
+Type=simple
+User=ttl
+Group=ttl
+WorkingDirectory=/home/ttl/ttlcoin/mining-pool
+ExecStart=/usr/bin/node distributor.js
+Environment=DIST_RATE=100
+Environment=DIST_INTERVAL=86400
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

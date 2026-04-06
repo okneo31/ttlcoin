@@ -1,0 +1,34 @@
+[Unit]
+Description=TTL Coin Backup Node
+After=ttlcoin.service
+Wants=ttlcoin.service
+
+[Service]
+Type=simple
+User=ttl
+Group=ttl
+ExecStart=/home/ttl/ttlcoin/src/build/bin/geth \
+  --datadir /home/ttl/.ttlcoin-backup \
+  --networkid 7777 \
+  --port 30304 \
+  --http \
+  --http.addr 127.0.0.1 \
+  --http.port 8547 \
+  --http.api eth,net,web3,txpool \
+  --http.corsdomain * \
+  --http.vhosts * \
+  --ws \
+  --ws.addr 127.0.0.1 \
+  --ws.port 8548 \
+  --ws.api eth,net,web3 \
+  --ws.origins * \
+  --verbosity 3 \
+  --syncmode full \
+  --gcmode archive \
+  --bootnodes "enode://79890fdb780e6a7a469940bdcc008b14ad4c47dbbad73501cbecee9dde6f4b248a88b85cba9e9d339240a1e9eb14ef37160a206adb95f1fc0fb65ef92f25441e@127.0.0.1:30303"
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

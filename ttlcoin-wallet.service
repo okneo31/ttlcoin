@@ -1,0 +1,18 @@
+[Unit]
+Description=TTL Coin Wallet API + Indexer
+After=ttlcoin.service
+Wants=ttlcoin.service
+
+[Service]
+Type=simple
+User=ttl
+Group=ttl
+WorkingDirectory=/home/ttl/ttlcoin/wallet-api
+ExecStart=/usr/bin/node server.js
+Environment=WALLET_PORT=4000
+Environment=RPC_URL=http://localhost:8545
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

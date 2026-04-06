@@ -1,0 +1,37 @@
+[Unit]
+Description=TTL Coin Main Node
+After=network.target
+
+[Service]
+Type=simple
+User=ttl
+Group=ttl
+ExecStart=/home/ttl/ttlcoin/src/build/bin/geth \
+  --datadir /home/ttl/.ttlcoin \
+  --networkid 7777 \
+  --port 30303 \
+  --http \
+  --http.addr 0.0.0.0 \
+  --http.port 8545 \
+  --http.api eth,net,web3,admin,clique,miner,txpool,debug \
+  --http.corsdomain * \
+  --http.vhosts * \
+  --ws \
+  --ws.addr 0.0.0.0 \
+  --ws.port 8546 \
+  --ws.api eth,net,web3 \
+  --ws.origins * \
+  --mine \
+  --miner.etherbase 0x49b60177cC7DcD4EC4477a7F9fC42F18fE40CeC4 \
+  --unlock 0x49b60177cC7DcD4EC4477a7F9fC42F18fE40CeC4 \
+  --password /home/ttl/.ttlcoin/password.txt \
+  --allow-insecure-unlock \
+  --verbosity 3 \
+  --syncmode full \
+  --gcmode full
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
